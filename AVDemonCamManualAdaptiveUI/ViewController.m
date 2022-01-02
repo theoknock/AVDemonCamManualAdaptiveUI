@@ -54,41 +54,17 @@ static double (^CaptureDeviceConfigurationPropertyButtonAngle)(CaptureDeviceConf
 //    return rescaled_angle;
 //};
 
-static void (^(^(^property_component_renderer)(ControlRendererState))(void))(void);
+static void (^(^(^property_component_renderer)(void))(void))(void);
 static void (^(^render_property_component_init)(void))(void);
 static void (^render_property_component)(void);
-static void (^(^(^(^property_component_renderer_init)(void))(ControlRendererState))(void))(void) = ^{
+static void (^(^(^(^property_component_renderer_init)(void))(void))(void))(void) = ^{
     id objects[] = {
         ^{
-            static int angle;
-            static int offset;
-            const NSUInteger frameInterval = 360;
-            void (^eventHandlerBlock)(void) = ^{
-                ++angle;
-                angle = angle;
-                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                    offset = CaptureDeviceConfigurationPropertyButtonAngle(property) + angle;
-                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
-                }
-                if (angle >= 90)
-                {
-                    [display_link invalidate];
-                    [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-                    angle = 0;
-                    offset = 0;
-                }
-            };
-            for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                [CaptureDeviceConfigurationPropertyButton(property) setHidden:FALSE]; //!([CaptureDeviceConfigurationPropertyButton(property) isHidden])];
-                [CaptureDeviceConfigurationPropertyButton(property) setSelected:FALSE];
-            }
-
-            [display_link invalidate];
-            display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
-            display_link.preferredFramesPerSecond = frameInterval;
-            [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
             return ^ {
-                
+                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                    [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isHidden])];
+                    [CaptureDeviceConfigurationPropertyButton(property) setSelected:FALSE];
+                }
             };
         },
         ^{
@@ -104,32 +80,10 @@ static void (^(^(^(^property_component_renderer_init)(void))(ControlRendererStat
             };
         },
         ^{
-            static int angle;
-            static int offset;
-            const NSUInteger frameInterval = 360;
-            void (^eventHandlerBlock)(void) = ^{
-                ++angle;
-                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                    offset = CaptureDeviceConfigurationPropertyButtonAngle(property) - angle;
-                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
-                }
-                if (angle >= 90)
-                {
-                    [display_link invalidate];
-                    [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-                    angle = 0;
-                    offset = 0;
-                }
-            };
-            for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isSelected])];
-            }
-            [display_link invalidate];
-            display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
-            display_link.preferredFramesPerSecond = frameInterval;
-            [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
             return ^ {
-                
+                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                    [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isSelected])];
+                }
             };
         },
         ^{
@@ -143,53 +97,53 @@ static void (^(^(^(^property_component_renderer_init)(void))(ControlRendererStat
     
     NSUInteger count = sizeof(objects) / sizeof(id);
     __block NSArray<void(^(^)(void))(void)> * property_component_renderers = [NSArray arrayWithObjects:objects count:count];
-    return ^ (ControlRendererState property_component_renderer_state) {
-        return [property_component_renderers objectAtIndex:property_component_renderer_state % 4];
+    return ^{
+        return [property_component_renderers objectAtIndex:cycle_state()];
     };
 };
 
-static void (^(^(^value_component_renderer)(ControlRendererState))(void))(void);
+static void (^(^(^value_component_renderer)(void))(void))(void);
 static void (^(^render_value_component_init)(void))(void);
 static void (^render_value_component)(void);
-static void (^(^(^(^value_component_renderer_init)(void))(ControlRendererState))(void))(void) = ^{
+static void (^(^(^(^value_component_renderer_init)(void))(void))(void))(void) = ^{
     
-    static int angle;
-    static int offset;
-    void (^eventHandlerBlock)(void) = ^{
-        ++angle;
-        angle = angle % 180;
-        for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-            offset = (CaptureDeviceConfigurationPropertyButtonAngle(property) - 90) + angle;
-            [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
-        }
-        if (angle >= 90.0)
-        {
-            [display_link invalidate];
-            [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-            angle = 0.0;
-            offset = 0.0;
-        }
-    };
+    static CGFloat starting_radius, ending_radius, radius_step, radius_val;
     
-    void (^(^animation)(void))(void) = ^{
-        const NSUInteger frameInterval = 360;
-        [display_link invalidate];
-        display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
-        display_link.preferredFramesPerSecond = frameInterval;
-        
-        [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-        return ^ {
+    void (^(^(^animation)(void))(void))(void) = ^{
+        return ^{
+            starting_radius = radius;
+            ending_radius   = CGRectGetMinX(control_view.layer.bounds);
+            radius_step     = 0.0005; //(ending_radius - radius);
+            radius_val      = starting_radius;
+            void (^eventHandlerBlock)(void) = ^{
+                radius_val += radius_step;
+                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius_val startAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) endAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) clockwise:FALSE] currentPoint]];
+                }
+                if (radius_val >= ending_radius)
+                {
+                    [display_link invalidate];
+                    [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+                }
+            };
             
+            const NSUInteger frameInterval = (unsigned int)round(radius_max - radius_min);
+            [display_link invalidate];
+            display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
+            display_link.preferredFramesPerSecond = frameInterval;
+            
+            [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+            return ^ {
+                
+            };
         };
     };
-    id objects[] = { ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; } };
-    
-    
+    id objects[] = { animation(), animation(), animation(), animation() };
     NSUInteger count = sizeof(objects) / sizeof(id);
     __block NSArray<void(^(^)(void))(void)> * value_component_renderers = [NSArray arrayWithObjects:objects count:count];
     
-    return ^ (ControlRendererState value_component_renderer_state) {
-        return [value_component_renderers objectAtIndex:(value_component_renderer_state % 4)];
+    return ^{
+        return [value_component_renderers objectAtIndex:controlRendererState.control_renderer_state];
     };
 };
 
@@ -206,9 +160,8 @@ static void (^(^(^touch_handler_init)(void))(UITouch * _Nonnull))(void) = ^{
     radius_min = center_point.x - CGRectGetMidX(CaptureDeviceConfigurationPropertyButton(CaptureDeviceConfigurationControlPropertyTorchLevel).bounds);
     radius_max = CGRectGetMidX(UIScreen.mainScreen.bounds) - CGRectGetMaxX(CaptureDeviceConfigurationPropertyButton(CaptureDeviceConfigurationControlPropertyTorchLevel).bounds);
     radius = radius_max;
-    control_renderer_state = ControlRendererStateProperty;
-    render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())(control_renderer_state))();
-    render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())(control_renderer_state))();
+    render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())())();
+    render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())())();
     
     return ^ (UITouch * _Nonnull touch) {
         return ^{
@@ -225,31 +178,33 @@ static void (^(^(^touch_handler_init)(void))(UITouch * _Nonnull))(void) = ^{
             : CGRectGetMidX(control_view.bounds) - CGRectGetMaxX(CaptureDeviceConfigurationPropertyButton(CaptureDeviceConfigurationControlPropertyTorchLevel).bounds);
             
             render_property_component();
-//            render_value_component();
+            render_value_component();
         };
     };
 };
 
+
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     //    (handle_touch = (touch_handler = touch_handler_init())(touches.anyObject));
-    (handle_touch = touch_handler(touches.anyObject))();
-    
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{  (handle_touch = touch_handler(touches.anyObject))(); });
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    handle_touch();
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{ handle_touch(); });
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    handle_touch();
-    ++control_renderer_state;
-    render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())(control_renderer_state))();
-    render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())(control_renderer_state))();
-    handle_touch();
-    ++control_renderer_state;
-    render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())(control_renderer_state))();
-    render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())(control_renderer_state))();
-    handle_touch();
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{ handle_touch(); });
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{
+        (render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())())())();
+        (render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())())())();
+    });
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{ handle_touch(); });
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{
+        (render_value_component = (render_value_component_init = (value_component_renderer = value_component_renderer_init())())())();
+        (render_property_component = (render_property_component_init = (property_component_renderer = property_component_renderer_init())())())();
+    });
+    dispatch_barrier_async(dispatch_get_main_queue(), ^{ handle_touch(); });
 }
 
 + (Class)layerClass {
@@ -264,29 +219,27 @@ static void (^(^(^touch_handler_init)(void))(UITouch * _Nonnull))(void) = ^{
             [self setOpaque:FALSE];
             [self setClipsToBounds:FALSE];
         };
-
+        
         {
             [self setUserInteractionEnabled:FALSE];
             {
                 touch_handler = touch_handler_init();
-//                [UIView animateWithDuration:2.0 delay:0.0 usingSpringWithDamping:1.0 initialSpringVelocity:1.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-                    for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                        [self addSubview:CaptureDeviceConfigurationPropertyButton(property)];
-                        [CaptureDeviceConfigurationPropertyButton(property) setCenter:
-                         [[UIBezierPath bezierPathWithArcCenter:center_point
-                                                         radius:radius
-                                                     startAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
-                                                       endAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
-                                                      clockwise:FALSE] currentPoint]];
-                    }
-//                } completion:^(BOOL finished) {
-//                    [control_view setNeedsDisplay];
-//                }];
+                //                [UIView animateWithDuration:2.0 delay:0.0 usingSpringWithDamping:1.0 initialSpringVelocity:1.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                    [self addSubview:CaptureDeviceConfigurationPropertyButton(property)];
+                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:
+                     [[UIBezierPath bezierPathWithArcCenter:center_point
+                                                     radius:radius
+                                                 startAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
+                                                   endAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
+                                                  clockwise:FALSE] currentPoint]];
+                }
+                //                } completion:^(BOOL finished) {
+                //                    [control_view setNeedsDisplay];
+                //                }];
             }
             [self setUserInteractionEnabled:TRUE];
         };
-        
-        
     }
     
     return self;

@@ -37,18 +37,6 @@ static CGFloat radius; // not recalculated for every state
 static void (^(^touch_handler)(UITouch * _Nonnull))(void);
 static void (^handle_touch)(void);
 
-typedef NS_ENUM(NSUInteger, ControlRendererState) {
-    ControlRendererStatePropertyTransition, // button arc setup (after touchesEnded on tick wheel or initialization)
-    ControlRendererStateProperty,           // button arc behavior and event handling
-    ControlRendererStateValueTransition,    // tick wheel setup (after touchesEnded on button arc)
-    ControlRendererStateValue,              // tick wheel behavior and event handling
-    ControlRendererStateConfiguration       // non-adaptive control property configuration of the arc center point, arc size and arc origin
-};
-static ControlRendererState control_renderer_state;
-//static void (^(^property_component_renderer)(void))(ControlRendererState);
-//static void (^(^render_property_component_init)(void))(void);
-//static void (^render_property_component)(void);
-
 //@interface ControlView: UIView
 //
 //@end

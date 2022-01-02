@@ -141,4 +141,41 @@ static const UIButton * (^(^CaptureDeviceConfigurationPropertyButtons)(void))(Ca
 
 static UIButton * (^CaptureDeviceConfigurationPropertyButton)(CaptureDeviceConfigurationControlProperty);
 
+typedef enum {
+    ControlStateRenderPropertyComponentTransition = 1 << 0,
+    ControlStateRenderPropertyComponent           = 1 << 1,
+    ControlStateRenderValueComponentTransition    = 1 << 2,
+    ControlStateRenderValueComponent              = 1 << 3
+} ControlState;
+
+#define Hide   0b00001
+#define Show   0b00010
+#define Visibility (Hide | Show)
+
+typedef enum {
+    Hidden = 1 << 0,
+    Shown  = 1 << 1
+} ButtonVisibility;
+
+#define Select      0b00001
+#define Deselect    0b00010
+#define Selection (Select | Deselect)
+
+#define ControlRendererStatePropertyComponentTransition  0b0001
+#define ControlRendererStatePropertyComponent            0b0010
+#define ControlRendererStateValueComponentTransition     0b0100
+#define ControlRendererStateValueComponent               0b1000
+#define State (ControlRendererStatePropertyComponentTransition | ControlRendererStatePropertyComponent | ControlRendererStateValueComponentTransition | ControlRendererStateValueComponent)
+
+typedef struct __attribute__((objc_boxable)) ControlRendererState ControlRendererState;
+static struct __attribute__((objc_boxable)) ControlRendererState {
+    unsigned int control_renderer_state : 1 << 4 >> 3;
+} controlRendererState = {
+    .control_renderer_state = 0b0001
+};
+
+static unsigned int (^cycle_state)(void) = ^{
+    return controlRendererState.control_renderer_state++;
+};
+
 #endif /* ControlConfiguration_h */
