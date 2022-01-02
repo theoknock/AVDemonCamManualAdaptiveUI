@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 static AVCaptureDevice * _Nonnull capture_device;
 static ControlView * _Nonnull control_view;
+static CADisplayLink * _Nonnull display_link;
 
 // calculated once
 static CGFloat radius_min;

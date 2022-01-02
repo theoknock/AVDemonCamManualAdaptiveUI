@@ -15,15 +15,16 @@
 
 extern AVCaptureDevice * _Nonnull capture_device;
 extern ControlView * _Nonnull control_view;
+extern CADisplayLink * _Nonnull display_link;
 
 @interface ControlView ()
 
 @property (assign) NSTimeInterval frameDuration;
-@property (strong) CADisplayLink *displayLink;
 
 @end
 
 
+/// <#Description#>
 @implementation ControlView
 
 static double rescale(double old_value, double old_min, double old_max, double new_min, double new_max) {
@@ -105,22 +106,37 @@ static void (^(^(^value_component_renderer)(ControlRendererState))(void))(void);
 static void (^(^render_value_component_init)(void))(void);
 static void (^render_value_component)(void);
 static void (^(^(^(^value_component_renderer_init)(void))(ControlRendererState))(void))(void) = ^{
+    
+    static int angle;
+    static int offset;
+    void (^eventHandlerBlock)(void) = ^{
+        ++angle;
+        angle = angle % 180;
+        for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+            offset = (CaptureDeviceConfigurationPropertyButtonAngle(property) - 90) + angle;
+            [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
+        }
+        if (angle >= 90.0)
+        {
+            [display_link invalidate];
+            [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+            angle = 0.0;
+            offset = 0.0;
+        }
+    };
+    
     void (^(^animation)(void))(void) = ^{
-        CGFloat radius_fixed = radius;
-        //        [control_view.layer setPosition:CGPointMake(CGRectGetMaxX(control_view.layer.bounds), CGRectGetMaxY(control_view.layer.bounds))];
-        //        [control_view.layer setAnchorPoint:CGPointMake(1.0, 1.0)];
+        const NSUInteger frameInterval = 360;
+        [display_link invalidate];
+        display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
+        display_link.preferredFramesPerSecond = frameInterval;
+        
+        [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
         return ^ {
-            static CGFloat offset_angle;
-            for (int angle = 0; angle < 360; angle++) {
-                for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                    offset_angle = (180.0 + angle) + CaptureDeviceConfigurationPropertyButtonAngle(property);
-                    
-                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius_fixed startAngle:degreesToRadians(angle) endAngle:degreesToRadians(angle) clockwise:FALSE] currentPoint]];
-                }
-            }
+            
         };
     };
-    id objects[] = { animation , ^{ return ^{}; }, animation, ^{ return ^{}; } };
+    id objects[] = { animation , ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; } };
     
     
     NSUInteger count = sizeof(objects) / sizeof(id);
@@ -194,18 +210,6 @@ static void (^(^(^touch_handler_init)(void))(UITouch * _Nonnull))(void) = ^{
     return [CAShapeLayer class];
 }
 
-static CGFloat angle;
-static CGFloat offset;
-- (void)displayLinkDidFire:(CADisplayLink *)displayLink
-{
-//    printf("duration == %f\n", displayLink.duration);
-    angle = (angle < 360.0) ? angle + 1.0/*displayLink.duration*/ : 0.0;
-    for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                offset = CaptureDeviceConfigurationPropertyButtonAngle(property) + angle;
-                [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:TRUE] currentPoint]];
-            }
-}
-
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self == [super initWithFrame:frame]) {
         {
@@ -214,36 +218,24 @@ static CGFloat offset;
             [self setOpaque:FALSE];
             [self setClipsToBounds:FALSE];
         };
-        {
-            
-            
-            const NSInteger frameInterval = 180;
-            
-            
-            [self.displayLink invalidate];
-            self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkDidFire:)];
-            self.displayLink.preferredFramesPerSecond = frameInterval;
-            
-            [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-        };
-        
+
         {
             [self setUserInteractionEnabled:FALSE];
             {
                 touch_handler = touch_handler_init();
-                [UIView animateWithDuration:2.0 delay:0.0 usingSpringWithDamping:1.0 initialSpringVelocity:1.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+//                [UIView animateWithDuration:2.0 delay:0.0 usingSpringWithDamping:1.0 initialSpringVelocity:1.0 options:UIViewAnimationOptionBeginFromCurrentState animations:^{
                     for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
                         [self addSubview:CaptureDeviceConfigurationPropertyButton(property)];
                         [CaptureDeviceConfigurationPropertyButton(property) setCenter:
                          [[UIBezierPath bezierPathWithArcCenter:center_point
                                                          radius:radius
-                                                     startAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property))
-                                                       endAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property))
+                                                     startAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
+                                                       endAngle:degreesToRadians(CaptureDeviceConfigurationPropertyButtonAngle(property)) - 90.0
                                                       clockwise:FALSE] currentPoint]];
                     }
-                } completion:^(BOOL finished) {
-                    [control_view setNeedsDisplay];
-                }];
+//                } completion:^(BOOL finished) {
+//                    [control_view setNeedsDisplay];
+//                }];
             }
             [self setUserInteractionEnabled:TRUE];
         };
