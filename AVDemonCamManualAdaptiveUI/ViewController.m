@@ -60,11 +60,35 @@ static void (^render_property_component)(void);
 static void (^(^(^(^property_component_renderer_init)(void))(ControlRendererState))(void))(void) = ^{
     id objects[] = {
         ^{
-            return ^ {
+            static int angle;
+            static int offset;
+            const NSUInteger frameInterval = 360;
+            void (^eventHandlerBlock)(void) = ^{
+                ++angle;
+                angle = angle;
                 for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                    [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isHidden])];
-                    [CaptureDeviceConfigurationPropertyButton(property) setSelected:FALSE];
+                    offset = CaptureDeviceConfigurationPropertyButtonAngle(property) + angle;
+                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
                 }
+                if (angle >= 90)
+                {
+                    [display_link invalidate];
+                    [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+                    angle = 0;
+                    offset = 0;
+                }
+            };
+            for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                [CaptureDeviceConfigurationPropertyButton(property) setHidden:FALSE]; //!([CaptureDeviceConfigurationPropertyButton(property) isHidden])];
+                [CaptureDeviceConfigurationPropertyButton(property) setSelected:FALSE];
+            }
+
+            [display_link invalidate];
+            display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
+            display_link.preferredFramesPerSecond = frameInterval;
+            [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+            return ^ {
+                
             };
         },
         ^{
@@ -80,10 +104,32 @@ static void (^(^(^(^property_component_renderer_init)(void))(ControlRendererStat
             };
         },
         ^{
-            return ^ {
+            static int angle;
+            static int offset;
+            const NSUInteger frameInterval = 360;
+            void (^eventHandlerBlock)(void) = ^{
+                ++angle;
                 for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
-                    [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isSelected])];
+                    offset = CaptureDeviceConfigurationPropertyButtonAngle(property) - angle;
+                    [CaptureDeviceConfigurationPropertyButton(property) setCenter:[[UIBezierPath bezierPathWithArcCenter:center_point radius:radius startAngle:degreesToRadians(offset) endAngle:degreesToRadians(offset) clockwise:FALSE] currentPoint]];
                 }
+                if (angle >= 90)
+                {
+                    [display_link invalidate];
+                    [display_link removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+                    angle = 0;
+                    offset = 0;
+                }
+            };
+            for (CaptureDeviceConfigurationControlProperty property = CaptureDeviceConfigurationControlPropertyTorchLevel; property < CaptureDeviceConfigurationControlPropertySelected; property++) {
+                [CaptureDeviceConfigurationPropertyButton(property) setHidden:!([CaptureDeviceConfigurationPropertyButton(property) isSelected])];
+            }
+            [display_link invalidate];
+            display_link = [CADisplayLink displayLinkWithTarget:eventHandlerBlock selector:@selector(invoke)];
+            display_link.preferredFramesPerSecond = frameInterval;
+            [display_link addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+            return ^ {
+                
             };
         },
         ^{
@@ -136,7 +182,7 @@ static void (^(^(^(^value_component_renderer_init)(void))(ControlRendererState))
             
         };
     };
-    id objects[] = { animation , ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; } };
+    id objects[] = { ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; }, ^{ return ^{}; } };
     
     
     NSUInteger count = sizeof(objects) / sizeof(id);
