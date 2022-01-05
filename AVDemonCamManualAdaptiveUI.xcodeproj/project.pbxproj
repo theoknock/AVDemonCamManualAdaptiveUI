@@ -13,6 +13,7 @@
 		B91E6EA727812A8200EA5BFA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B91E6EA627812A8200EA5BFA /* Assets.xcassets */; };
 		B91E6EAA27812A8200EA5BFA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B91E6EA827812A8200EA5BFA /* LaunchScreen.storyboard */; };
 		B91E6EAD27812A8200EA5BFA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B91E6EAC27812A8200EA5BFA /* main.m */; };
+		B9A92E892784F76F00BE21EF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9A92E882784F76F00BE21EF /* Accelerate.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 		B91E6EAC27812A8200EA5BFA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B91E6EB327812B2E00EA5BFA /* ControlConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ControlConfiguration.h; sourceTree = "<group>"; };
 		B91E6EB427812BE000EA5BFA /* ControlView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ControlView.h; sourceTree = "<group>"; };
+		B9A92E882784F76F00BE21EF /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9A92E892784F76F00BE21EF /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,6 +50,7 @@
 			children = (
 				B91E6E9927812A7F00EA5BFA /* AVDemonCamManualAdaptiveUI */,
 				B91E6E9827812A7F00EA5BFA /* Products */,
+				B9A92E872784F76F00BE21EF /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -75,6 +79,14 @@
 				B91E6EAC27812A8200EA5BFA /* main.m */,
 			);
 			path = AVDemonCamManualAdaptiveUI;
+			sourceTree = "<group>";
+		};
+		B9A92E872784F76F00BE21EF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B9A92E882784F76F00BE21EF /* Accelerate.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

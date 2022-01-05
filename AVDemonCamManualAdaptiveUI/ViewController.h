@@ -8,10 +8,14 @@
 @import UIKit;
 @import AVFoundation;
 
-#import "ControlConfiguration.h"
 #import "ControlView.h"
 
+
+
 NS_ASSUME_NONNULL_BEGIN
+
+#ifndef ViewController_h
+#define ViewController_h
 
 
 static AVCaptureDevice * _Nonnull capture_device;
@@ -30,6 +34,7 @@ static CGFloat touch_angle;
 // ...but touch property is dependent on touch_angle, but is not recalculated for every state
 static CaptureDeviceConfigurationControlProperty touch_property;
 
+static UIButton * (^(^bg)(CaptureDeviceConfigurationControlProperty))(void);
 
 // No dependencies
 static CGFloat radius; // not recalculated for every state
@@ -37,13 +42,14 @@ static CGFloat radius; // not recalculated for every state
 static void (^(^touch_handler)(UITouch * _Nonnull))(void);
 static void (^handle_touch)(void);
 
+
 //@interface ControlView: UIView
 //
 //@end
 //
-//NS_ASSUME_NONNULL_END
+NS_ASSUME_NONNULL_END
 
-//NS_ASSUME_NONNULL_BEGIN
+NS_ASSUME_NONNULL_BEGIN
 
 @interface CameraView : UIView
 
@@ -59,5 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) CameraView * view;
 
 @end
+#endif /* ViewController_h */
 
 NS_ASSUME_NONNULL_END
+
+
