@@ -83,8 +83,8 @@ static CaptureDeviceConfigurationControlBit (^bit_operation)(CaptureDeviceConfig
     /*
      Return a block that modifies the global bit vectors (state, property, selected or hidden), based on the bit supplied to it by the receiver
      (when executed, the block sent by the receiver as a parameter will presumably execute code based on the changes made to the global bit vectors)
-     
      A block-chain structure ensures that, as soon as changes are made to the bit vectors, the object that processes them acts on them.
+     "Function composition is an act or mechanism to combine simple functions to build more complicated ones. Like the usual composition of functions in mathematics, the result of each function is passed as the argument of the next, and the result of the last one is the result of the whole." [https://en.wikipedia.org/wiki/Function_composition_(computer_science)]
      
      The parameter-block supplied to the receiver block is "purely functional programming, a subset of functional programming which treats all functions as deterministic mathematical functions, or pure functions. When a pure function is called with some given arguments, it will always return the same result, and cannot be affected by any mutable state or other side effects." [https://en.wikipedia.org/wiki/Functional_programming]
      The receiver block itself is an "impure procedure[s, also] common in imperative programming, which can have side effects (such as modifying the program's state or taking input from a user", which it, in fact, does.
