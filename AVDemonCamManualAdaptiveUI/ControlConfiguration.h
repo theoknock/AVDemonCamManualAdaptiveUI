@@ -12,37 +12,33 @@
 #ifndef ControlConfiguration_h
 #define ControlConfiguration_h
 
-
 #define degreesToRadians(angleDegrees) (angleDegrees * M_PI / 180.0)
-// Button state
 
-typedef enum {
-    ControlStateRenderPropertyComponentTransition = 1 << 0,
-    ControlStateRenderPropertyComponent           = 1 << 1,
-    ControlStateRenderValueComponentTransition    = 1 << 2,
-    ControlStateRenderValueComponent              = 1 << 3
-} ControlState;
+typedef uint8_t CaptureDeviceConfigurationControlBit;
+typedef CaptureDeviceConfigurationControlBit CaptureDeviceConfigurationControlBitMask;
+typedef CaptureDeviceConfigurationControlBitMask CaptureDeviceConfigurationControlBitVector;
 
+/*
+ CONTROL STATE
+ 
+ In computer science, predication is an architectural feature that provides an alternative to conditional transfer of control, as implemented by conditional branch machine instructions. Predication works by having conditional (predicated) non-branch instructions associated with a predicate, a Boolean value used by the instruction to control whether the instruction is allowed to modify the architectural state or not. If the predicate specified in the instruction is true, the instruction modifies the architectural state; otherwise, the architectural state is unchanged. For example, a predicated move instruction (a conditional move) will only modify the destination if the predicate is true. Thus, instead of using a conditional branch to select an instruction or a sequence of instructions to execute based on the predicate that controls whether the branch occurs, the instructions to be executed are associated with that predicate, so that they will be executed, or not executed, based on whether that predicate is true or false.
+ Vector processors, some SIMD ISAs (such as AVX2 and AVX-512) and GPUs in general make heavy use of predication, applying one bit of a conditional mask Vector to the corresponding elements in the Vector registers being processed, whereas scalar predication in scalar instruction sets only need the one predicate bit. Where Predicate Masks become particularly powerful in Vector processing is if an array of Condition Codes, one per Vector element, may feed back into Predicate Masks that are then applied to subsequent Vector instructions.
+ */
 
-#define ControlRendererStatePropertyComponentTransition  0b0001
-#define ControlRendererStatePropertyComponent            0b0010
-#define ControlRendererStateValueComponentTransition     0b0100
-#define ControlRendererStateValueComponent               0b1000
-#define State (ControlRendererStatePropertyComponentTransition | ControlRendererStatePropertyComponent | ControlRendererStateValueComponentTransition | ControlRendererStateValueComponent)
-
-typedef struct __attribute__((objc_boxable)) ControlRendererState ControlRendererState;
-static struct __attribute__((objc_boxable)) ControlRendererState {
-    unsigned int control_renderer_state : 1 << 4 >> 3;
-} controlRendererState = {
-    .control_renderer_state = 0b0001
+typedef NS_OPTIONS(CaptureDeviceConfigurationControlBit, CaptureDeviceConfigurationControlStateBit) {
+    CaptureDeviceConfigurationControlStateBitRenderPropertyComponentTransition = 1 << 0,
+    CaptureDeviceConfigurationControlStateBitRenderPropertyComponent           = 1 << 1,
+    CaptureDeviceConfigurationControlStateBitRenderValueComponentTransition    = 1 << 2,
+    CaptureDeviceConfigurationControlStateBitRenderValueComponent              = 1 << 3,
+    CaptureDeviceConfigurationControlStateBitComponentConfiguration            = 1 << 4
 };
 
-static unsigned int (^cycle_state)(void) = ^{
-    return controlRendererState.control_renderer_state++;
-};
-static simd_uchar1 control_state_bit_vector = {1 << 0 | 1 << 1 | 1 << 2 | 1 << 3};
+typedef CaptureDeviceConfigurationControlStateBit               CaptureDeviceConfigurationControlStateBitMask;
+typedef CaptureDeviceConfigurationControlStateBitMask           CaptureDeviceConfigurationControlStateBitVector;
+static  CaptureDeviceConfigurationControlStateBitVector         control_state_bit_vector     = CaptureDeviceConfigurationControlStateBitRenderPropertyComponent;
+static  CaptureDeviceConfigurationControlStateBitVector * const control_state_bit_vector_ptr = &control_state_bit_vector;
 
-typedef NS_OPTIONS(uint8_t, CaptureDeviceConfigurationControlPropertyBit) {
+typedef NS_OPTIONS(CaptureDeviceConfigurationControlBit, CaptureDeviceConfigurationControlPropertyBit) {
     CaptureDeviceConfigurationControlPropertyBitTorchLevel       = 1 << 0,
     CaptureDeviceConfigurationControlPropertyBitLensPosition     = 1 << 1,
     CaptureDeviceConfigurationControlPropertyBitExposureDuration = 1 << 2,
@@ -59,7 +55,7 @@ static  CaptureDeviceConfigurationControlPropertyBitVector         property_bit_
                                                                                               CaptureDeviceConfigurationControlPropertyBitZoomFactor);
 static  CaptureDeviceConfigurationControlPropertyBitVector * const property_bit_vector_ptr = &property_bit_vector;
 
-typedef NS_OPTIONS(uint8_t, CaptureDeviceConfigurationControlSelectedPropertyBit) {
+typedef NS_OPTIONS(CaptureDeviceConfigurationControlBit, CaptureDeviceConfigurationControlSelectedPropertyBit) {
     CaptureDeviceConfigurationControlSelectedPropertyBitTorchLevel       = 1 << 0,
     CaptureDeviceConfigurationControlSelectedPropertyBitLensPosition     = 1 << 1,
     CaptureDeviceConfigurationControlSelectedPropertyBitExposureDuration = 1 << 2,
@@ -71,7 +67,7 @@ typedef CaptureDeviceConfigurationControlSelectedPropertyBitMask           Captu
 static  CaptureDeviceConfigurationControlSelectedPropertyBitVector         selected_property_bit_vector     = (0 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4);
 static  CaptureDeviceConfigurationControlSelectedPropertyBitVector * const selected_property_bit_vector_ptr = &selected_property_bit_vector;
 
-typedef NS_OPTIONS(uint8_t, CaptureDeviceConfigurationControlHiddenPropertyBit) {
+typedef NS_OPTIONS(CaptureDeviceConfigurationControlBit, CaptureDeviceConfigurationControlHiddenPropertyBit) {
     CaptureDeviceConfigurationControlHiddenPropertyBitTorchLevel       = 1 << 0,
     CaptureDeviceConfigurationControlHiddenPropertyBitLensPosition     = 1 << 1,
     CaptureDeviceConfigurationControlHiddenPropertyBitExposureDuration = 1 << 2,
@@ -83,35 +79,24 @@ typedef CaptureDeviceConfigurationControlHiddenPropertyBitMask           Capture
 static  CaptureDeviceConfigurationControlHiddenPropertyBitVector         hidden_property_bit_vector     = (0 << 0 | 0 << 1 | 0 << 2 | 0 << 3 | 0 << 4);
 static  CaptureDeviceConfigurationControlHiddenPropertyBitVector * const hidden_property_bit_vector_ptr = &hidden_property_bit_vector;
 
-static CaptureDeviceConfigurationControlPropertyBitVector (^mask_property_bit_vector)(CaptureDeviceConfigurationControlPropertyBitMask) = ^ CaptureDeviceConfigurationControlPropertyBitVector (CaptureDeviceConfigurationControlPropertyBitMask property_bit_mask) {
-    property_bit_vector = property_bit_vector | property_bit_mask;
-    return *property_bit_vector_ptr;
+static CaptureDeviceConfigurationControlBit (^bit_operation)(CaptureDeviceConfigurationControlBit(^)(CaptureDeviceConfigurationControlBit(^)(CaptureDeviceConfigurationControlBit))) = ^ CaptureDeviceConfigurationControlBit (CaptureDeviceConfigurationControlBit(^receiver_block)(CaptureDeviceConfigurationControlBit(^)(CaptureDeviceConfigurationControlBit))) {
+    /*
+     Return a block that modifies the global bit vectors (state, property, selected or hidden), based on the bit supplied to it by the receiver
+     (when executed, the block sent by the receiver as a parameter will presumably execute code based on the changes made to the global bit vectors)
+     
+     A block-chain structure ensures that, as soon as changes are made to the bit vectors, the object that processes them acts on them.
+     
+     The parameter-block supplied to the receiver block is "purely functional programming, a subset of functional programming which treats all functions as deterministic mathematical functions, or pure functions. When a pure function is called with some given arguments, it will always return the same result, and cannot be affected by any mutable state or other side effects." [https://en.wikipedia.org/wiki/Functional_programming]
+     The receiver block itself is an "impure procedure[s, also] common in imperative programming, which can have side effects (such as modifying the program's state or taking input from a user", which it, in fact, does.
+     */
+    return
+    receiver_block(^CaptureDeviceConfigurationControlStateBit (CaptureDeviceConfigurationControlBit bit) {
+        //
+        return CaptureDeviceConfigurationControlStateBitRenderPropertyComponent;
+    });
 };
-
-static CaptureDeviceConfigurationControlSelectedPropertyBitVector (^mask_selected_property_bit_vector)(CaptureDeviceConfigurationControlSelectedPropertyBit) = ^ CaptureDeviceConfigurationControlSelectedPropertyBitVector (CaptureDeviceConfigurationControlSelectedPropertyBit selected_property_bit) {
-    selected_property_bit_vector   = selected_property_bit_vector & 0;
-    selected_property_bit_vector   = selected_property_bit_vector | selected_property_bit;
-    hidden_property_bit_vector    ^= ~((selected_property_bit_vector & ~selected_property_bit_vector));
-
-    return *selected_property_bit_vector_ptr;
-};
-
-static CaptureDeviceConfigurationControlHiddenPropertyBitVector (^mask_hidden_property_bit_vector)(CaptureDeviceConfigurationControlSelectedPropertyBitVector) = ^ (CaptureDeviceConfigurationControlSelectedPropertyBitMask selected_property_bit_mask) {
-    return *hidden_property_bit_vector_ptr;
-};
-
-// Button rendering
 
 #define degreesToRadians(angleDegrees) (angleDegrees * M_PI / 180.0)
-
-typedef NS_OPTIONS(NSUInteger, CaptureDeviceConfigurationControlProperty) {
-    CaptureDeviceConfigurationControlPropertyTorchLevel       = 0,
-    CaptureDeviceConfigurationControlPropertyLensPosition     = 1,
-    CaptureDeviceConfigurationControlPropertyExposureDuration = 2,
-    CaptureDeviceConfigurationControlPropertyISO              = 3,
-    CaptureDeviceConfigurationControlPropertyZoomFactor       = 4,
-    CaptureDeviceConfigurationControlPropertyNone             = 5
-};
 
 static NSArray<NSArray<NSString *> *> * const CaptureDeviceConfigurationControlPropertyImageNames = @[@[@"bolt.circle",
                                                                                                         @"viewfinder.circle",
@@ -216,8 +201,8 @@ static const UIButton * (^(^(^button_group)(CaptureDeviceConfigurationControlPro
             [button setUserInteractionEnabled:TRUE];
             
             void (^eventHandlerBlock)(void) = ^{
-
-//                _simd_pow_d2(<#simd_double2 x#>, <#simd_double2 y#>)
+                NSLog(@"BUTTON EVENT HANDLER");
+//                _simd_pow_d2(, `)
 //                _simd_atan2_d2(<#simd_double2 y#>, <#simd_double2 x#>)
 //                simd_slerp(<#simd_quatf q0#>, <#simd_quatf q1#>, <#float t#>)
 //                simd_negate(<#simd_quatd q#>)
@@ -237,7 +222,7 @@ static const UIButton * (^(^(^button_group)(CaptureDeviceConfigurationControlPro
                 for (int property = 0; property < 5; property++) {
                     [buttons[property]() setTitle:[NSString stringWithFormat:@"%d - %d",
                                                    (BOOL)(get_byte(selected_hidden_bit_vector_pair[0], property_tag) & mask(buttons[property]().tag)), //(selected_hidden_bit_vector_pair[0] | (CaptureDeviceConfigurationControlSelectedPropertyBit)(property_tag)),
-                                                   (BOOL)(get_byte(hidden_property_bit_vector,   property_tag) & mask(buttons[property]().tag))] forState:UIControlStateNormal];
+                                                   (BOOL)(get_byte(hidden_property_bit_vector, property_tag) & mask(buttons[property]().tag))] forState:UIControlStateNormal];
                     [buttons[property]() setSelected:(BOOL)(get_byte(selected_hidden_bit_vector_pair[0], property_tag) & mask(buttons[property]().tag))]; //(selected_hidden_bit_vector_pair[0] | (CaptureDeviceConfigurationControlSelectedPropertyBit)(property_tag)),
                 };
             };
