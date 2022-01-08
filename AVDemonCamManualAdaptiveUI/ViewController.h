@@ -32,9 +32,7 @@ static CGPoint touch_point;  // always needed
 // touch angle is independent of touch_property...
 static CGFloat touch_angle;
 // ...but touch property is dependent on touch_angle, but is not recalculated for every state
-static CaptureDeviceConfigurationControlProperty touch_property;
-
-static UIButton * (^(^bg)(CaptureDeviceConfigurationControlProperty))(void);
+static int touch_property;
 
 // No dependencies
 static CGFloat radius; // not recalculated for every state
