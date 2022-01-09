@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <limits.h>
 
+
+
 #ifndef ControlConfiguration_h
 #define ControlConfiguration_h
-
-#define degreesToRadians(angleDegrees) (angleDegrees * M_PI / 180.0)
 
 #define CONTROL_STATES_COUNT     4
 #define CONTROL_STATES_INDEX_MIN 0
@@ -33,9 +33,9 @@ static ControlState control_states[CONTROL_STATES_COUNT] = {[CONTROL_STATES_INDE
 
 typedef enum : const simd_uchar1 {
     ControlPropertyTorchLevel        = 0x01,
-    ControlPropertyLensPosition      = 0x02,
-    ControlPropertyExposureDuration  = 0x04,
-    ControlPropertyISO               = 0x08,
+    ControlPropertyExposureDuration  = 0x02,
+    ControlPropertyISO               = 0x04,
+    ControlPropertyLensPosition      = 0x08,
     ControlPropertyZoomFactor        = 0x10,
     ControlPropertyAll               = 0x20,
     ControlPropertyVisible           = 0x40,
@@ -46,61 +46,59 @@ static ControlProperty selected_control[CONTROL_PROPERTIES_COUNT] = {[CONTROL_PR
 static ControlProperty enabled_controls[CONTROL_PROPERTIES_COUNT] = {[CONTROL_PROPERTIES_INDEX_MIN ... CONTROL_PROPERTIES_INDEX_MAX] = 0x01};
 static const simd_uchar8 control_properties = (ControlPropertyTorchLevel | ControlPropertyLensPosition | ControlPropertyExposureDuration | ControlPropertyISO | ControlPropertyZoomFactor);
 
-#define BITMASK(b) (1 << ((b) % CHAR_BIT))
-#define BITSLOT(b) ((b) / CHAR_BIT)
-#define BITSET(a, b) ((a)[BITSLOT(b)] |= BITMASK(b))
-#define BITCLEAR(a, b) ((a)[BITSLOT(b)] &= ~BITMASK(b))
-#define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))
-#define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
+static CGPoint center_point;
+static CGPoint touch_point;
+static CGFloat touch_angle;
 
-typedef UIButton *(^ControlButton)(void);
-static ControlButton control_buttons[CONTROL_PROPERTIES_COUNT] = {[CONTROL_PROPERTIES_INDEX_MIN ... CONTROL_PROPERTIES_INDEX_MAX] =
-    ^ UIButton * {
-        return [UIButton new];
-    }};
-typeof(control_buttons) * button_group = &control_buttons;
 
-static dispatch_queue_t byte_queue;
-static void (^(^enumerate)(typeof(control_buttons) *, ControlProperty[CONTROL_PROPERTIES_COUNT], ControlProperty[CONTROL_PROPERTIES_COUNT], ControlProperty[CONTROL_PROPERTIES_COUNT], const unsigned long))(void (^__strong)(simd_uchar1, simd_uchar1, simd_uchar1, typeof(ControlButton), const unsigned long)) = ^ (typeof(control_buttons) * button_group, ControlProperty * _Nonnull control_property_bit_array, ControlProperty * _Nonnull selected_control_bit_array, ControlProperty * _Nonnull enabled_controls_bit_array, const unsigned long bit_count) {
-    if (!byte_queue) byte_queue = dispatch_queue_create("byte_rw", DISPATCH_QUEUE_CONCURRENT);
-    dispatch_queue_t serial_queue = dispatch_queue_create("com.bush.james", DISPATCH_QUEUE_SERIAL);
-    return ^ (void(^enumeration)(simd_uchar1 control_property_bit, simd_uchar1 selected_control_bit, simd_uchar1 enabled_controls_bit, typeof(ControlButton) button, const unsigned long bit_position)) {
-        dispatch_apply(sizeof(control_property_bit_array), byte_queue, ^(size_t iteration) {
-            dispatch_async(serial_queue, ^{
-                enumeration(control_property_bit_array[iteration],
-                            selected_control_bit_array[iteration],
-                            enabled_controls_bit_array[iteration],
-                            *button_group[iteration],
-                            iteration - CONTROL_PROPERTIES_COUNT);
-            });
-        });
-    };
-};
+static double (^button_angles[CONTROL_PROPERTIES_COUNT])(void)  = {[CONTROL_PROPERTIES_INDEX_MIN ... CONTROL_PROPERTIES_INDEX_MAX] = ^{
+    static int property_tags = 0x00;
+    
+    return ^ (const unsigned int property_tag) {
+        static double touch_angle;
+        
+        touch_angle = (atan2((touch_point).y - (center_point).y,
+                             (touch_point).x - (center_point).x)) * (180.0 / M_PI);
+        if (touch_angle < 0.0) touch_angle += 360.0;
+        touch_angle = fmaxf(180.0, fminf(touch_angle, 270.0));
+        
+        touch_angle = (double)(180.0 + (90.0 * ((double)property_tag / 4.0)));
+        printf("touch_angle\t\t%f\n", touch_angle);
+        return ^ double {
+            return touch_angle;
+        }();
+    }(property_tags++);
+}};
 
-// TO-DO: enumerate_bit should optionally return id
-//        this can be done using either a block that returns void or a block that returns id
-//        to choose which of the two blocks to execute:
-//        typedef both blocks
-//        make a generic pointer to each
-//        require a passing of a pointer to one of the kinds of blocks for the enumerate block
-//        test the pointer to determine its equality with either block:
-//              (true ? block_returning_id : block_pointer_to_block_returning_id)(enumerate_bit_block)
-// Abstract enumerator using GCD Blocks
+/*
+ 
+ */
+
+#define degreesToRadians(angleDegrees) (angleDegrees * M_PI / 180.0)
+
+static CGFloat radius_min;
+static CGFloat radius_max;
+static int touch_property;
+static CGFloat radius;
+
+/*
+ 
+ */
 
 static NSArray<NSArray<NSString *> *> * const CaptureDeviceConfigurationControlPropertyImageSymbolValues = @[@[@"bolt.circle",
-                                                                                                               @"viewfinder.circle",
                                                                                                                @"timer",
                                                                                                                @"camera.aperture",
+                                                                                                               @"viewfinder.circle",
                                                                                                                @"magnifyingglass.circle"], @[@"bolt.circle.fill",
-                                                                                                                                             @"viewfinder.circle.fill",
                                                                                                                                              @"timer",
                                                                                                                                              @"camera.aperture",
+                                                                                                                                             @"viewfinder.circle.fill",
                                                                                                                                              @"magnifyingglass.circle.fill"]];
 
 static NSArray<NSString *> * const CaptureDeviceConfigurationControlPropertyImageSymbolKeys = @[@"CaptureDeviceConfigurationControlPropertyTorchLevel",
-                                                                                                @"CaptureDeviceConfigurationControlPropertyLensPosition",
                                                                                                 @"CaptureDeviceConfigurationControlPropertyExposureDuration",
                                                                                                 @"CaptureDeviceConfigurationControlPropertyISO",
+                                                                                                @"CaptureDeviceConfigurationControlPropertyLensPosition",
                                                                                                 @"CaptureDeviceConfigurationControlPropertyZoomFactor"];
 
 static NSString * (^CaptureDeviceConfigurationControlPropertySymbol)(UIControlState, int) = ^ NSString * (UIControlState state, int property) {
@@ -113,7 +111,6 @@ static NSString * (^CaptureDeviceConfigurationControlPropertyString)(int) = ^ NS
 
 static UIImageSymbolConfiguration * (^CaptureDeviceConfigurationControlPropertySymbolImageConfiguration)(UIControlState) = ^ UIImageSymbolConfiguration * (UIControlState state) {
     UIImageSymbolWeight symbol_weight = UIImageSymbolWeightLight;
-    
     switch (state) {
         case UIControlStateNormal: {
             symbol_weight = UIImageSymbolWeightLight;
@@ -142,6 +139,66 @@ static UIImageSymbolConfiguration * (^CaptureDeviceConfigurationControlPropertyS
 static UIImage * (^CaptureDeviceConfigurationControlPropertySymbolImage)(int, UIControlState) = ^ UIImage * (int property, UIControlState state) {
     return [UIImage systemImageNamed:CaptureDeviceConfigurationControlPropertyImageSymbolValues[state][property] withConfiguration:CaptureDeviceConfigurationControlPropertySymbolImageConfiguration(state)];
 };
+
+#define BITMASK(b) (1 << ((b) % CHAR_BIT))
+#define BITSLOT(b) ((b) / CHAR_BIT)
+#define BITSET(a, b) ((a)[BITSLOT(b)] |= BITMASK(b))
+#define BITCLEAR(a, b) ((a)[BITSLOT(b)] &= ~BITMASK(b))
+#define BITTEST(a, b) ((a)[BITSLOT(b)] & BITMASK(b))
+#define BITNSLOTS(nb) ((nb + CHAR_BIT - 1) / CHAR_BIT)
+
+
+static UIButton * (^control_buttons_init[CONTROL_PROPERTIES_COUNT])(void) = {[CONTROL_PROPERTIES_INDEX_MIN ... CONTROL_PROPERTIES_INDEX_MAX] =
+    ^{
+        static int property_tags = 0x00;
+        printf("\n%d\n", (int)property_tags);
+        static dispatch_once_t onceToken[5];
+        __block UIButton * b;
+        return ^ (const unsigned long property_tag) {
+            dispatch_once(&onceToken[property_tag], ^{
+                b = [UIButton new];
+                [b setTag:property_tag];
+                [b setBackgroundColor:[UIColor clearColor]];
+                [b setImage:[UIImage systemImageNamed:CaptureDeviceConfigurationControlPropertyImageSymbolValues[0][property_tag] withConfiguration:CaptureDeviceConfigurationControlPropertySymbolImageConfiguration(UIControlStateNormal)]   forState:UIControlStateNormal];
+                [b setImage:[UIImage systemImageNamed:CaptureDeviceConfigurationControlPropertyImageSymbolValues[1][property_tag] withConfiguration:CaptureDeviceConfigurationControlPropertySymbolImageConfiguration(UIControlStateSelected)] forState:UIControlStateSelected];
+                [b setImage:[UIImage systemImageNamed:CaptureDeviceConfigurationControlPropertyImageSymbolValues[0][property_tag] withConfiguration:CaptureDeviceConfigurationControlPropertySymbolImageConfiguration(UIControlStateDisabled)] forState:UIControlStateDisabled];
+                [b sizeToFit];
+//                [[b titleLabel] setAdjustsFontSizeToFitWidth:CGRectGetWidth([[b titleLabel] frame])];
+//                [b setBounds:CGRectMake(0.0, 0.0, [b intrinsicContentSize].width, [b intrinsicContentSize].height)];
+            });
+            return ^ UIButton * {
+                return b;
+            }();
+        }(property_tags++);
+    }};
+
+static dispatch_queue_t byte_queue;
+static void (^(^enumerate)(ControlProperty[CONTROL_PROPERTIES_COUNT], ControlProperty[CONTROL_PROPERTIES_COUNT], ControlProperty[CONTROL_PROPERTIES_COUNT], const unsigned long))(void (^__strong)(simd_uchar1, simd_uchar1, simd_uchar1, UIButton *, const unsigned long)) = ^ (ControlProperty * _Nonnull control_property_bit_array, ControlProperty * _Nonnull selected_control_bit_array, ControlProperty * _Nonnull enabled_controls_bit_array, const unsigned long bit_count) {
+    if (!byte_queue) byte_queue = dispatch_queue_create("byte_rw", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_queue_t serial_queue = dispatch_queue_create_with_target("com.bush.james", DISPATCH_QUEUE_SERIAL, dispatch_get_main_queue());
+    return ^ (void(^enumeration)(simd_uchar1, simd_uchar1, simd_uchar1, UIButton *, const unsigned long)) {
+        dispatch_apply(CONTROL_PROPERTIES_COUNT, byte_queue, ^(size_t iteration) {
+            dispatch_async(serial_queue, ^{
+                enumeration(control_property_bit_array[iteration],
+                            selected_control_bit_array[iteration],
+                            enabled_controls_bit_array[iteration],
+                            control_buttons_init[iteration](),
+                            bit_count);
+            });
+        });
+    };
+};
+
+// TO-DO: enumerate_bit should optionally return id
+//        this can be done using either a block that returns void or a block that returns id
+//        to choose which of the two blocks to execute:
+//        typedef both blocks
+//        make a generic pointer to each
+//        require a passing of a pointer to one of the kinds of blocks for the enumerate block
+//        test the pointer to determine its equality with either block:
+//              (true ? block_returning_id : block_pointer_to_block_returning_id)(enumerate_bit_block)
+// Abstract enumerator using GCD Blocks
+
 
 static double rescale(double old_value, double old_min, double old_max, double new_min, double new_max) {
     return (new_max - new_min) * /*(fmax(old_min, fmin(old_value, old_max))*/ (old_value - old_min) / (old_max - old_min) + new_min;
@@ -221,7 +278,7 @@ static const void (^select_button)(const char *, const char *, const char) = ^ (
 
 //static UIButton * (^(^(^button_group[5])(void))(ControlProperty[8], ControlProperty[8], ControlProperty[8], unsigned int))(UIButton * (^__strong)(simd_uchar1, simd_uchar1, simd_uchar1, unsigned int)) = ^{
 //    ^{ return };
-//    
+//
 //    return ^ UIButton * (ControlProperty * _Nonnull control_property_bit_array, ControlProperty * _Nonnull selected_control_bit_array, ControlProperty * _Nonnull enabled_controls_bit_array, unsigned int bit_count) {
 //    static const UIButton * buttons[PROPERTY_BUTTONS_COUNT];
 //    return ^ UIButton[5]* (UIButton * (^enumerate_bit)(simd_uchar1 control_property_bit_array, simd_uchar1 selected_control_bit_array, simd_uchar1 enabled_controls_bit_array, unsigned int bit_count)) {
